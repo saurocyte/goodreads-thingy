@@ -2,6 +2,7 @@ import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import 'bulma/css/bulma.css'
+import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.css'
 import marked from 'marked'
 import * as api from './api.js'
 import * as util from './utility.js'
@@ -27,27 +28,36 @@ const mock_row = (i) => {
 
 class Root extends React.Component {
   state = {
-      entry_rows: new Map()
+      entry_rows: new Map(),
+      isSearching: false
   }
 
   textToDom = text => {
-    let dom = (new DOMParser()).parseFromString(marked(text), 'text/html')
-    let titles = Array.from(dom.querySelectorAll('p')).map(p => p.textContent.split('\n')).flat()
+    const dom = (new DOMParser()).parseFromString(marked(text), 'text/html'),
+          titles = Array.from(dom.querySelectorAll('p')).map(p => p.textContent.split('\n')).flat()
     return titles
   }
 
   handleChange = fileInput => async (ev) => {
     console.log('handleChange(...) was called')
     ev.preventDefault()
-    let text = await fileInput.current.files[0].text()
-    let titles = this.textToDom(text)
+
+    const text = await fileInput.current.files[0].text(),
+          titles = this.textToDom(text)
+
     const loop = async () => {
       for (const [i, t] of titles.entries()) {
+        this.setState({
+          ...this.state,
+          isSearching: true
+        })
+
         await util.wait(1000)
         api.search(t, 1)
           .then(works => {
-            let new_map = new Map(this.state.entry_rows)
-            new_map.set(i, works[0])
+            const new_map = new Map(this.state.entry_rows),
+                  book = { ...works[0], query_title: t }
+            new_map.set(i, book)
             this.setState({
               ...this.state,
               entry_rows: new_map
@@ -55,9 +65,14 @@ class Root extends React.Component {
             console.log(new_map)
           }, console.log)
       }
-    }
-    loop()
 
+      this.setState({
+        ...this.state,
+        isSearching: false
+      })
+    }
+
+    loop()
   }
 
   render() {
@@ -67,9 +82,8 @@ class Root extends React.Component {
             <DatabaseChooser/>
             <DragAndDrop handleChange={this.handleChange}/>
         </Header>
-
         <Grid>
-          <BookTable entry_rows={this.state.entry_rows}/>
+          <BookTable loading={this.state.isSearching} entry_rows={this.state.entry_rows}/>
         </Grid>
       </Fragment>
     )
@@ -122,55 +136,58 @@ class DatabaseChooser extends React.Component {
 
 class BookTableRow extends React.Component {
   render() {
-    return (
-      <tr>
-        <td>{this.props.index}</td>
-        <td>{this.props.title}</td>
-        <td>{this.props.author}</td>
-        <td>{this.props.avg_rating}</td>
-      </tr>
-    )
-  }
-}
-
-class BookTable extends React.Component {
-  make_row = (i, book) => {
     if (this.props.undefined) {
       return (
         <tr className='is-danger'>
-          <td>{i}</td>
+          <td>
+            <span className='has-tooltip-arrow has-tooltip-right has-tooltip-info'
+                  data-tooltip={this.props.query}>
+              {this.props.index}
+            </span>
+          </td>
           <td>data missing</td>
           <td>data missing</td>
           <td>data missing</td>
         </tr>
       )
+    } else {
+      return (
+        <tr>
+          <td>
+            <span className='has-tooltip-arrow has-tooltip-right has-tooltip-info'
+                  data-tooltip={this.props.query}>
+              {this.props.index}
+            </span>
+          </td>
+          <td>{this.props.title}</td>
+          <td>{this.props.author}</td>
+          <td>{this.props.avg_rating}</td>
+        </tr>
+      )
     }
-    return (
-      <tr>
-        <td>{i}</td>
-        <td>{book.title}</td>
-        <td>{book.author}</td>
-        <td>{book.avg_rating}</td>
-      </tr>
-    )
   }
+}
 
+class BookTable extends React.Component {
   render() {
     const entry_rows = Array.from(this.props.entry_rows).map(([i, b]) => {
-      if (b === undefined) {
-        return <BookTableRow undefined/>
+      if (b.title === undefined) {
+        return <BookTableRow index={i + 1} query={b.query_title} undefined/>
       } else {
-        return <BookTableRow index={i} title={b.title} author={b.author} rating={b.rating}/>
+        return <BookTableRow index={i + 1} query={b.query_title} title={b.title} 
+                             author={b.author} avg_rating={b.avg_rating}/>
       }
     })
 
-    const loading_row = 
-      <tr>
-        <td>{entry_rows.length}</td>
-        <td><span className='is-loading'>⠀</span></td>
-        <td><span className='is-loading'>⠀</span></td>
-        <td><span className='is-loading'>⠀</span></td>
-      </tr>
+    const loading_row = this.props.loading
+      ?
+        <tr>
+          <td>{entry_rows.length + 1}</td>
+          <td><span className='is-loading'>⠀</span></td>
+          <td><span className='is-loading'>⠀</span></td>
+          <td><span className='is-loading'>⠀</span></td>
+        </tr>
+      : undefined
 
     return (
       <table className='booktable table is-striped is-hoverable is-fullwidth is-narrow'>
