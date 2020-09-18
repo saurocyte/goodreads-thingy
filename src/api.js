@@ -4,8 +4,11 @@ import axios from 'axios'
 // cors-anywhere limit is 200 requests per hour
 
 const key = 'Pgmx0gQaF4Bojtz9EtV8uA'
+const goodreads_url = 'www.goodreads.com'
+const cors_anywhere_url = '0.0.0.0:8080'
+
 const instance = axios.create({
-    baseURL: 'https://cors-anywhere.herokuapp.com/www.goodreads.com/',
+    baseURL: `http://${cors_anywhere_url}/${goodreads_url}`,
     headers: {"X-Requested-With" : "XMLHttpRequest"}
 })
 const parser = new DOMParser()
@@ -27,7 +30,7 @@ export function search_all(qseq, fn) {
 */
 
 export async function search(q, page, id=undefined) {
-    console.log('searching ', `https://www.goodreads.com/search/index.xml?q=${q}&page=${page}&key=${key}`)
+    console.log('searching ', `${goodreads_url}/search/index.xml?q=${q}&page=${page}&key=${key}`)
     const { data } = await instance.get(`/search/index.xml?q=${q}&page=${page}&key=${key}`)
     const xml = parser.parseFromString(data, 'text/xml')
     const works = Array.from(xml.getElementsByTagName('work'))
