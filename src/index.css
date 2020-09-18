@@ -29,6 +29,10 @@
   align-items: center;
 }
 
+.is-danger {
+  background-color: hsl(348, 100%, 61%) !important;
+}
+
 @keyframes moving-gradient {
   0% {
     background-position: -250px 0;
@@ -47,3 +51,4 @@
   animation-timing-function: linear;
   animation-fill-mode: forwards;
 }
+
