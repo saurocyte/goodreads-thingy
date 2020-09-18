@@ -3,16 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@creativebulma/bulma-tooltip": "^1.2.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
     "animejs": "^3.2.0",
     "axios": "^0.20.0",
     "bulma": "^0.9.0",
+    "bulma-tooltip": "^3.0.2",
+    "cors-anywhere": "^0.4.3",
     "marked": "^1.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.3"
+    "react-scripts": "3.4.3",
+    "sqlite3": "^5.0.0"
   },
   "scripts": {
     "start": "react-scripts start",

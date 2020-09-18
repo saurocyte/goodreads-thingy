@@ -62,7 +62,6 @@ class Root extends React.Component {
               ...this.state,
               entry_rows: new_map
             })
-            console.log(new_map)
           }, console.log)
       }
 
@@ -135,10 +134,42 @@ class DatabaseChooser extends React.Component {
 }
 
 class BookTableRow extends React.Component {
+  state = {
+    desc: undefined,
+    isOpen: false
+  }
+
+  clickHandler = async ev => {
+    console.log('CLICK')
+    if (this.state.isOpen) {
+      this.setState({
+        ...this.state,
+        isOpen: false,
+      })
+    } else {
+      const desc = this.state.desc || await api.get_description(this.props.id)
+      this.setState({
+        ...this.state,
+        desc: desc,
+        isOpen: true,
+      })
+    }
+  }
+
   render() {
+    const desc_row = (this.state.desc && this.state.isOpen)
+      ? <tr>
+          <td colSpan='4'>
+            <p dangerouslySetInnerHTML={{__html: this.state.desc}}></p>
+          </td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      : undefined
     if (this.props.undefined) {
       return (
-        <tr className='is-danger'>
+        <tr className='is-danger' onClick={this.clickHandler}>
           <td>
             <span className='has-tooltip-arrow has-tooltip-right has-tooltip-info'
                   data-tooltip={this.props.query}>
@@ -152,17 +183,20 @@ class BookTableRow extends React.Component {
       )
     } else {
       return (
-        <tr>
-          <td>
-            <span className='has-tooltip-arrow has-tooltip-right has-tooltip-info'
-                  data-tooltip={this.props.query}>
-              {this.props.index}
-            </span>
-          </td>
-          <td>{this.props.title}</td>
-          <td>{this.props.author}</td>
-          <td>{this.props.avg_rating}</td>
-        </tr>
+        <Fragment>
+          <tr onClick={this.clickHandler}>
+            <td>
+              <span className='has-tooltip-arrow has-tooltip-right has-tooltip-info'
+                    data-tooltip={this.props.query}>
+                {this.props.index}
+              </span>
+            </td>
+            <td>{this.props.title}</td>
+            <td>{this.props.author}</td>
+            <td>{this.props.avg_rating}</td>
+          </tr>
+          {desc_row}
+        </Fragment>
       )
     }
   }
@@ -172,9 +206,9 @@ class BookTable extends React.Component {
   render() {
     const entry_rows = Array.from(this.props.entry_rows).map(([i, b]) => {
       if (b.title === undefined) {
-        return <BookTableRow index={i + 1} query={b.query_title} undefined/>
+        return <BookTableRow index={i + 1} id={b.id} query={b.query_title} undefined/>
       } else {
-        return <BookTableRow index={i + 1} query={b.query_title} title={b.title} 
+        return <BookTableRow index={i + 1} id={b.id} query={b.query_title} title={b.title} 
                              author={b.author} avg_rating={b.avg_rating}/>
       }
     })

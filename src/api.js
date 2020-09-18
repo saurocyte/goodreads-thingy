@@ -30,7 +30,6 @@ export function search_all(qseq, fn) {
 */
 
 export async function search(q, page, id=undefined) {
-    console.log('searching ', `${goodreads_url}/search/index.xml?q=${q}&page=${page}&key=${key}`)
     const { data } = await instance.get(`/search/index.xml?q=${q}&page=${page}&key=${key}`)
     const xml = parser.parseFromString(data, 'text/xml')
     const works = Array.from(xml.getElementsByTagName('work'))
@@ -41,7 +40,7 @@ export async function search(q, page, id=undefined) {
                 author: select('author').match(/^\d+\n\s+(.*)$/)[1],
                 cover_img: select('image_url'),
                 avg_rating: select('average_rating'),
-                id: select('id')
+                id: w.querySelectorAll('id')[1].textContent.trim()
             }
         })
     if (id) { return [id, works] }
